@@ -54,6 +54,12 @@ describe("TwitterActionProvider", () => {
 
       expect(() => new TwitterActionProvider()).toThrow("TWITTER_API_KEY is not configured.");
     });
+
+    it("should properly initialize the Twitter API client", () => {
+      const provider = new TwitterActionProvider(MOCK_CONFIG);
+      const response = provider.accountDetails({});
+      expect(response).toBeDefined();
+    });
   });
 
   describe("Account Details Action", () => {

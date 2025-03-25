@@ -41,7 +41,7 @@ export interface TwitterActionProviderConfig {
  * @augments ActionProvider
  */
 export class TwitterActionProvider extends ActionProvider {
-  private readonly client: TwitterApi;
+  private client: TwitterApi | null = null;
 
   /**
    * Constructor for the TwitterActionProvider class.
@@ -69,12 +69,34 @@ export class TwitterActionProvider extends ActionProvider {
       throw new Error("TWITTER_ACCESS_TOKEN_SECRET is not configured.");
     }
 
-    this.client = new TwitterApi({
-      appKey: config.apiKey,
-      appSecret: config.apiSecret,
-      accessToken: config.accessToken,
-      accessSecret: config.accessTokenSecret,
-    } as TwitterApiTokens);
+    this.initializeClient(config);
+  }
+
+  /**
+   * Initialize the Twitter API client
+   *
+   * @param config - The configuration options for the Twitter API client
+   */
+  private initializeClient(config: TwitterActionProviderConfig): void {
+    const tokens: TwitterApiTokens = {
+      appKey: config.apiKey!,
+      appSecret: config.apiSecret!,
+      accessToken: config.accessToken!,
+      accessSecret: config.accessTokenSecret!,
+    };
+    this.client = new TwitterApi(tokens);
+  }
+
+  /**
+   * Get the Twitter API client
+   *
+   * @returns The Twitter API client
+   */
+  private getClient(): TwitterApi {
+    if (!this.client) {
+      throw new Error("Twitter API client not initialized");
+    }
+    return this.client;
   }
 
   /**
@@ -97,7 +119,7 @@ A failure response will return a message with a Twitter API request error:
   })
   async accountDetails(_: z.infer<typeof TwitterAccountDetailsSchema>): Promise<string> {
     try {
-      const response = await this.client.v2.me();
+      const response = await this.getClient().v2.me();
       response.data.url = `https://x.com/${response.data.username}`;
       return `Successfully retrieved authenticated user account details:\n${JSON.stringify(
         response,
@@ -127,7 +149,7 @@ A failure response will return a message with the Twitter API request error:
   })
   async accountMentions(args: z.infer<typeof TwitterAccountMentionsSchema>): Promise<string> {
     try {
-      const response = await this.client.v2.userMentionTimeline(args.userId);
+      const response = await this.getClient().v2.userMentionTimeline(args.userId);
       return `Successfully retrieved account mentions:\n${JSON.stringify(response)}`;
     } catch (error) {
       return `Error retrieving authenticated account mentions: ${error}`;
@@ -154,7 +176,7 @@ A failure response will return a message with the Twitter API request error:
   })
   async postTweet(args: z.infer<typeof TwitterPostTweetSchema>): Promise<string> {
     try {
-      const response = await this.client.v2.tweet(args.tweet);
+      const response = await this.getClient().v2.tweet(args.tweet);
       return `Successfully posted to Twitter:\n${JSON.stringify(response)}`;
     } catch (error) {
       return `Error posting to Twitter:\n${error}`;
@@ -181,7 +203,7 @@ A failure response will return a message with the Twitter API request error:
   })
   async postTweetReply(args: z.infer<typeof TwitterPostTweetReplySchema>): Promise<string> {
     try {
-      const response = await this.client.v2.tweet(args.tweetReply, {
+      const response = await this.getClient().v2.tweet(args.tweetReply, {
         reply: { in_reply_to_tweet_id: args.tweetId },
       });
 
