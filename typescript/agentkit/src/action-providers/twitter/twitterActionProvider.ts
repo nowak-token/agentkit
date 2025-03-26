@@ -54,7 +54,7 @@ export class TwitterActionProvider extends ActionProvider {
 
     // Store config for later use but don't initialize the client yet
     this.config = { ...config };
-    
+
     // Set defaults from environment variables
     this.config.apiKey ||= process.env.TWITTER_API_KEY;
     this.config.apiSecret ||= process.env.TWITTER_API_SECRET;
@@ -74,27 +74,6 @@ export class TwitterActionProvider extends ActionProvider {
     if (!this.config.accessTokenSecret) {
       throw new Error("TWITTER_ACCESS_TOKEN_SECRET is not configured.");
     }
-    
-    // Note: We don't initialize the client here
-  }
-
-  /**
-   * Get the Twitter API client, initializing it if needed
-   * 
-   * @returns The Twitter API client
-   */
-  private getClient(): TwitterApi {
-    if (!this.client) {
-      // Initialize client only when needed
-      const tokens: TwitterApiTokens = {
-        appKey: this.config.apiKey!,
-        appSecret: this.config.apiSecret!,
-        accessToken: this.config.accessToken!,
-        accessSecret: this.config.accessTokenSecret!,
-      };
-      this.client = new TwitterApi(tokens);
-    }
-    return this.client;
   }
 
   /**
@@ -220,6 +199,25 @@ A failure response will return a message with the Twitter API request error:
    */
   supportsNetwork(_: Network): boolean {
     return true;
+  }
+
+  /**
+   * Get the Twitter API client, initializing it if needed
+   *
+   * @returns The Twitter API client
+   */
+  private getClient(): TwitterApi {
+    if (!this.client) {
+      // Initialize client only when needed
+      const tokens: TwitterApiTokens = {
+        appKey: this.config.apiKey!,
+        appSecret: this.config.apiSecret!,
+        accessToken: this.config.accessToken!,
+        accessSecret: this.config.accessTokenSecret!,
+      };
+      this.client = new TwitterApi(tokens);
+    }
+    return this.client;
   }
 }
 
